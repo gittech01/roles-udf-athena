@@ -1,0 +1,82 @@
+Para criar e executar funções definidas pelo usuário (UDFs) no Amazon Athena através de uma função AWS Lambda, você precisa garantir que a função Lambda tenha permissões adequadas para interagir com o Athena e o serviço Lambda em si. Os mínimos de acesso necessário são:
+
+1. *Permissões para o Athena:*
+   A função Lambda precisará de permissões para interagir com o Athena, principalmente para criar e invocar consultas. A política a seguir deve ser atribuída à função Lambda:
+
+   - athena:StartQueryExecution
+   - athena:GetQueryExecution
+   - athena:GetQueryResults
+
+   Isso permite que o Lambda inicie e monitore consultas no Athena.
+
+2. *Permissões para o S3 (onde os resultados são armazenados):*
+   Como o Athena precisa armazenar os resultados das consultas no S3, a função Lambda também precisa de permissões para gravar nesse bucket S3. A política mínima seria:
+
+   - s3:PutObject
+   - s3:GetObject
+   - s3:ListBucket (caso precise listar o conteúdo do bucket)
+
+   Certifique-se de que o Lambda tenha permissão para escrever e ler os arquivos que serão utilizados como entrada e saída.
+
+3. Permissões para a execução da função Lambda:*
+   A função Lambda também precisa de permissões para ser executada e para fazer qualquer operação necessária, como acessar outros recursos dentro da AWS (por exemplo, CloudWatch Logs para logs de execução). Isso inclui:
+
+   - lambda:InvokeFunction
+   - logs:CreateLogGroup
+   - logs:CreateLogStream
+   - logs:PutLogEvents
+
+4. *Permissões para criar UDFs no Athena (caso necessário):*
+   Se o Lambda precisar criar ou registrar uma UDF no Athena, a permissão athena:CreateFunction pode ser necessária, dependendo do que está sendo feito. No entanto, para o uso padrão de UDFs via Athena, normalmente, o controle de UDFs é feito de maneira mais administrativa e não diretamente via Lambda.
+
+### Exemplo de política IAM básica para o Lambda:
+
+json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "athena:StartQueryExecution",
+        "athena:GetQueryExecution",
+        "athena:GetQueryResults"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": "arn:aws:s3:::seu-bucket/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    }
+  ]
+}
+
+
+Essa política inclui permissões básicas para executar consultas no Athena, interagir com o S3 e trabalhar com logs do CloudWatch.
+
+### Recomendações adicionais:
+- *Princípio do menor privilégio*: Sempre que possível, restrinja as permissões para recursos específicos (como buckets S3 ou instâncias do Athena) em vez de usar curingas (*).
+- *Segurança de rede*: Caso esteja utilizando VPC ou endpoints privados, configure o Lambda para acessar o Athena e o S3 corretamente dentro da sua rede.
+
+Com essas permissões mínimas, o Lambda deve ser capaz de interagir adequadamente com o Athena e criar UDFs, caso necessário.
