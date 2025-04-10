@@ -1,32 +1,4 @@
 import json
-import boto3
-from botocore.exceptions import NoCredentialsError
-
-def lambda_handler(event, context):
-    s3_client = boto3.client('s3')
-    bucket_name = 'seu-bucket'
-    file_key = event['queryStringParameters']['file_key']
-    
-    try:
-        url = s3_client.generate_presigned_url(
-            'get_object',
-            Params={'Bucket': bucket_name, 'Key': file_key},
-            ExpiresIn=60  # URL válida por 1 min
-        )
-        return {
-            'statusCode': 200,
-            'body': json.dumps({'url': url}),
-            'headers': {'Content-Type': 'application/json'}
-        }
-    except NoCredentialsError:
-        return {
-            'statusCode': 403,
-            'body': json.dumps({'error': 'Credenciais não encontradas'}),
-            'headers': {'Content-Type': 'application/json'}
-        }
-        
-
-import json
 
 import logging
 import boto3
