@@ -1,0 +1,77 @@
+Claro! Vou te ajudar a criar um site estático que utiliza AWS Lambda para carregar arquivos no S3. Aqui está um guia simplificado para você começar:
+
+1. Criar o Site Estático
+
+Primeiro, crie o conteúdo do seu site estático. Pode ser um simples arquivo HTML, CSS e JavaScript.
+
+~html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Site Estático</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Bem-vindo ao meu site estático!</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" />
+        <button type="submit">Upload</button>
+    </form>
+    <script src="script.js"></script>
+</body>
+</html>
+
+2. Criar o Script JavaScript para Upload
+
+Adicione um script JavaScript para capturar o arquivo e enviar para o Lambda.
+
+~javascript
+document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const file = document.getElementById('fileInput').files[0];
+    if (file) {
+        const response = await fetch('https://<API_GATEWAY_URL>/upload', {
+            method: 'POST',
+            body: file
+        });
+        const result = await response.json();
+        alert(result.message);
+    }
+});
+
+3. Configurar AWS Lambda
+
+Crie uma função Lambda que irá receber o arquivo e carregá-lo no S3.
+
+import boto3
+import json
+
+def lambda_handler(event, context):
+    s3 = boto3.client('s3')
+    bucket_name = 'your-s3-bucket-name'
+    file_content = event['body']
+    file_name = event['headers']['file-name']
+    
+    s3.put_object(Bucket=bucket_name, Key=file_name, Body=file_content)
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps({'message': 'File uploaded successfully!'})
+    }
+
+4. Configurar API Gateway
+
+Configure o API Gateway para que ele possa invocar sua função Lambda. Certifique-se de configurar o método POST e habilitar o CORS.
+
+5. Testar o Site
+
+Hospede seu site estático em um serviço como AWS S3 ou GitHub Pages e teste o upload de arquivos.
+
+Resumo
+ - HTML:Estrutura básica do site.
+ - JavaScript:Captura e envia o arquivo para o Lambda.
+ - Lambda:Recebe o arquivo e o carrega no S3.
+ - API Gateway:Conecta o site estático ao Lambda.
+
+Espero que isso ajude! Se precisar de mais detalhes ou tiver alguma dúvida, estou aqui para ajudar.

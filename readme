@@ -31,7 +31,7 @@ Para criar e executar funções definidas pelo usuário (UDFs) no Amazon Athena 
 
 ### Exemplo de política IAM básica para o Lambda:
 
-json
+json 
 {
   "Version": "2012-10-17",
   "Statement": [

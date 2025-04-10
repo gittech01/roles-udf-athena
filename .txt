@@ -1,0 +1,126 @@
+Claro! Vou te ajudar a criar um site estático com backend em AWS Lambda, utilizando URLs assinadas do S3 com Python. Aqui está um guia passo a passo:
+
+1. Configuração do S3
+
+Crie um bucket no S3:
+
+Acesse o console do AWS S3.
+Crie um novo bucket e configure as permissões conforme necessário.
+
+Carregue os arquivos estáticos:
+
+Carregue os arquivos HTML, CSS, JS e outros recursos estáticos no bucket.
+2. Configuração do Lambda
+
+Crie uma função Lambda:
+
+Acesse o console do AWS Lambda.
+Crie uma nova função Lambda com runtime Python.
+
+Código da função Lambda:
+
+Utilize o código abaixo para gerar URLs assinadas para os arquivos no S3:
+import json
+import boto3
+from botocore.exceptions import NoCredentialsError
+
+def lambda_handler(event, context):
+    s3_client = boto3.client('s3')
+    bucket_name = 'seu-bucket'
+    file_key = event['queryStringParameters']['file_key']
+    
+    try:
+        url = s3_client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket_name, 'Key': file_key},
+            ExpiresIn=3600  # URL válida por 1 hora
+        )
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'url': url}),
+            'headers': {'Content-Type': 'application/json'}
+        }
+    except NoCredentialsError:
+        return {
+            'statusCode': 403,
+            'body': json.dumps({'error': 'Credenciais não encontradas'}),
+            'headers': {'Content-Type': 'application/json'}
+        }
+
+3. Configuração do API Gateway
+
+Crie uma API REST no API Gateway:
+
+Acesse o console do API Gateway.
+Crie uma nova API REST.
+
+Configure um endpoint:
+
+Crie um novo recurso e método (GET).
+Integre o método com a função Lambda criada.
+4. Teste e Implementação
+
+Teste a API:
+
+Acesse o endpoint da API com um parâmetro file_key para obter a URL assinada.
+Exemplo: https://seu-endpoint.amazonaws.com/prod?file_key=seu-arquivo.html
+
+Integre no seu site:
+
+Utilize as URLs assinadas para acessar os arquivos estáticos no S3.
+Exemplo de Uso no Frontend
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Estático</title>
+</head>
+<body>
+    <h1>Bem-vindo ao Site Estático</h1>
+    <script>
+        async function fetchSignedUrl(fileKey) {
+            const response = await fetch(`https://seu-endpoint.amazonaws.com/prod?file_key=${fileKey}`);
+            const data = await response.json();
+            return data.url;
+        }
+
+        fetchSignedUrl('seu-arquivo.html').then(url => {
+            // Utilize a URL assinada conforme necessário
+            console.log('URL assinada:', url);
+        });
+    </script>
+</body>
+</html>
+
+
+Espero que isso ajude! Se precisar de mais alguma coisa, estou aqui para ajudar.
+
+
+
+endpoint = http://site-static-381694216496.s3-website-us-east-1.amazonaws.com
+
+
+
+Gere para mim toda estrutura necessária levando em consideração o prompt abaixo fazendo a construção do front e do back end, a configuração da api gateway e s3:
+
+Para arquivos maiores do que o limite do API Gateway (10 MB), uma solução comum é usar URLs assinadas do S3 para fazer o upload diretamente para o S3, sem passar pelo API Gateway.
+
+Fluxo de Upload de Arquivos Grandes:
+
+O frontend solicita uma URL assinada ao API Gateway.
+
+O API Gateway invoca uma função Lambda para gerar a URL assinada do S3.
+
+O frontend usa a URL assinada para enviar o arquivo diretamente para o S3 via HTTP PUT ou POST.
+
+Com essa abordagem, o upload do arquivo é feito diretamente para o S3 sem passar pelo API Gateway, o que evita os limites de tamanho do API Gateway.
+
+Exemplificando com Lambda + API Gateway para Gerar URL Assinada
+Aqui está um exemplo de como você pode configurar isso:
+
+O frontend pede a URL assinada ao API Gateway.
+
+O API Gateway invoca uma função Lambda que gera a URL assinada para o S3.
+
+O frontend usa a URL assinada para fazer o upload diretamente para o S3.

@@ -1,0 +1,58 @@
+/* Definindo o estilo geral da página */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Contêiner do formulário */
+.form-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 300px;
+}
+
+/* Título do formulário */
+h2 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Estilo do rótulo do input */
+.upload-label {
+    display: inline-block;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+/* Estilo do campo de upload de arquivo */
+.file-input {
+    display: none;
+}
+
+/* Estilo do botão */
+.submit-button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+/* Efeito ao passar o mouse sobre o botão */
+.submit-button:hover {
+    background-color: #45a049;
+}

@@ -1,0 +1,23 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "AllowLambdaAccess",
+            "Effect": "Allow",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::<seu-bucket>/*"
+            # "Condition": {
+            #     "StringEquals": {
+            #         "aws:PrincipalArn": "arn:aws:iam::<conta-aws>:role/<role-da-funcao-lambda>"
+            #     }
+            # }
+        },
+        {
+            "Sid": "AllowLambdaInvokeAPIGateway",
+            "Effect": "Allow",
+            "Action": "lambda:InvokeFunction",
+            "Resource": "*"
+        }
+
+    ]
+}
