@@ -1,0 +1,31 @@
+openapi: 3.0.3
+info:
+  title: File Upload API
+  version: 1.0.0
+  description: API para geração de URL pré-assinada para upload de arquivos no S3
+
+paths:
+  /files:
+    get:
+      summary: Gera uma URL pré-assinada para upload no S3
+      description: Retorna uma URL temporária para envio direto de um arquivo ao S3
+      responses:
+        '200':
+          description: URL pré-assinada gerada com sucesso
+          content:
+            application/json:
+              example:
+                uploadURL: "https://happy-path-upload.s3.amazonaws.com/abc123.txt?AWSAccessKeyId=..."
+              schema:
+                type: object
+                properties:
+                  uploadURL:
+                    type: string
+                    format: uri
+                    description: URL com permissão temporária para envio do arquivo
+        '400':
+          description: Tipo de arquivo não permitido
+          content:
+            application/json:
+              example:
+                error: "Unsupported file type. Only CSV, TXT, XLSX, and JPEG are allowed."
