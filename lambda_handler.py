@@ -2,6 +2,7 @@ import json
 
 import logging
 import boto3
+from unittest.mock import patch, MagicMock
 from botocore.exceptions import (
     ClientError, NoCredentialsError
 )
@@ -57,3 +58,52 @@ def lambda_handler(event, context):
         'statusCode': 200,
         'body': json.dumps(response)
     }
+
+# crie teste unitario para a função lambda_handler
+@patch('boto3.client')
+def test_lambda_handler(mock_boto3_client):
+    # Mock the S3 client response
+    mock_s3 = MagicMock()
+    mock_boto3_client.return_value = mock_s3
+    mock_s3.generate_presigned_post.return_value = {
+        'url': 'https://test-url.com',
+        'fields': {'key': 'value'}
+    }
+
+    event = {
+        'queryStringParameters': {
+            'file_name': 'teste.txt'
+        }
+    }   
+    context = {}
+    response = lambda_handler(event, context)
+    assert response['statusCode'] == 200
+    assert 'body' in response
+    
+    # Parse the nested response structure
+    response_body = json.loads(response['body'])
+    assert isinstance(response_body, dict)
+
+# crie teste unitario para a função create_presigned_post
+@patch('boto3.client')
+def test_create_presigned_post(mock_boto3_client):
+    # Mock the S3 client response
+    mock_s3 = MagicMock()
+    mock_boto3_client.return_value = mock_s3
+    mock_s3.generate_presigned_post.return_value = {
+        'url': 'https://test-url.com',
+        'fields': {'key': 'value'}
+    }
+
+    bucket_name = "name-bucket"
+    object_name = "teste.txt"
+    expiration = 3600
+    response = create_presigned_post(bucket_name, object_name, expiration)
+    assert response['statusCode'] == 200
+    assert json.loads(response['body'])['url'] is not None
+
+if __name__ == '__main__':
+    test_lambda_handler()
+    test_create_presigned_post()
+
+
