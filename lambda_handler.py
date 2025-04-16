@@ -44,22 +44,65 @@ def create_presigned_post(bucket_name, object_name, expiration=3600):
     
     
 def lambda_handler(event, context):
-    
-    object_name = event['queryStringParameters']['file_name']
-    bucket_name = "name-bucket"
-    
-    response = create_presigned_post(
-        bucket_name, 
-        object_name, 
-        expiration=3600
-    )
-    
-    return {
-        'statusCode': 200,
-        'body': json.dumps(response)
+    """
+    Lambda handler para gerar URL pré-assinada para upload de arquivo.
+    Espera um POST request com o seguinte formato no body:
+    {
+        "fileName": "nome-do-arquivo.ext",
+        "contentType": "application/pdf",  # opcional
+        "maxSize": 10485760  # opcional, tamanho máximo em bytes (10MB default)
     }
+    """
+    try:
+        # Verifica se é um POST request
+        if event.get('httpMethod') != 'POST':
+            return {
+                'statusCode': 405,
+                'body': json.dumps({'error': 'Método não permitido. Use POST.'}),
+                'headers': {'Content-Type': 'application/json'}
+            }
 
-# crie teste unitario para a função lambda_handler
+        # Parse do body
+        body = json.loads(event.get('body', '{}'))
+        
+        # Validações básicas
+        if not body.get('fileName'):
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'error': 'fileName é obrigatório'}),
+                'headers': {'Content-Type': 'application/json'}
+            }
+
+        # Validações adicionais podem ser feitas aqui
+        # Por exemplo, verificar contentType, maxSize, etc.
+        
+        object_name = body['fileName']
+        bucket_name = "name-bucket"
+        
+        response = create_presigned_post(
+            bucket_name, 
+            object_name, 
+            expiration=3600
+        )
+        
+        return response
+
+    except json.JSONDecodeError:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'error': 'JSON inválido no body'}),
+            'headers': {'Content-Type': 'application/json'}
+        }
+    except Exception as e:
+        logging.error(f"Erro inesperado: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': 'Erro interno do servidor'}),
+            'headers': {'Content-Type': 'application/json'}
+        }
+
+
+# Testes unitários
 @patch('boto3.client')
 def test_lambda_handler(mock_boto3_client):
     # Mock the S3 client response
@@ -71,18 +114,56 @@ def test_lambda_handler(mock_boto3_client):
     }
 
     event = {
-        'queryStringParameters': {
-            'file_name': 'teste.txt'
-        }
+        'httpMethod': 'POST',
+        'body': json.dumps({
+            'fileName': 'teste.txt',
+            'contentType': 'text/plain',
+            'maxSize': 10485760
+        })
     }   
     context = {}
     response = lambda_handler(event, context)
     assert response['statusCode'] == 200
     assert 'body' in response
     
-    # Parse the nested response structure
     response_body = json.loads(response['body'])
     assert isinstance(response_body, dict)
+    assert 'url' in response_body
+    assert response_body['url'] is not None
+
+@patch('boto3.client')
+def test_lambda_handler_invalid_method(mock_boto3_client):
+    event = {
+        'httpMethod': 'GET',
+        'body': json.dumps({
+            'fileName': 'teste.txt'
+        })
+    }
+    context = {}
+    response = lambda_handler(event, context)
+    assert response['statusCode'] == 405
+    assert 'body' in response
+    
+    response_body = json.loads(response['body'])
+    assert isinstance(response_body, dict)
+    assert 'error' in response_body
+    assert response_body['error'] == 'Método não permitido. Use POST.'
+
+@patch('boto3.client')
+def test_lambda_handler_missing_filename(mock_boto3_client):
+    event = {
+        'httpMethod': 'POST',
+        'body': json.dumps({})
+    }
+    context = {}
+    response = lambda_handler(event, context)
+    assert response['statusCode'] == 400
+    assert 'body' in response
+    
+    response_body = json.loads(response['body'])
+    assert isinstance(response_body, dict)
+    assert 'error' in response_body
+    assert response_body['error'] == 'fileName é obrigatório'
 
 # crie teste unitario para a função create_presigned_post
 @patch('boto3.client')
@@ -104,6 +185,8 @@ def test_create_presigned_post(mock_boto3_client):
 
 if __name__ == '__main__':
     test_lambda_handler()
+    test_lambda_handler_invalid_method()
+    test_lambda_handler_missing_filename()
     test_create_presigned_post()
 
 
